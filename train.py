@@ -6,7 +6,7 @@ import numpy as np
 import re
 
 DATASET = 'aisquared/cot-ensemble-prompts'
-MODEL_ID = 'gpt2-xlarge'
+MODEL_ID = 'gpt2-xl'
 QUESTION_KEY = 'Question:'
 THOUGHT_KEY = 'Thought:'
 ANSWER_KEY = 'Final Answer:'
