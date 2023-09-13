@@ -1,9 +1,8 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, DataCollatorForLanguageModeling, Trainer, TrainingArguments, set_seed
 from datasets import load_dataset, Dataset
 from functools import partial
-from tqdm import tqdm
 import numpy as np
-import re
+import click
 
 DATASET = 'aisquared/cot-ensemble-prompts'
 MODEL_ID = 'gpt2-xl'
@@ -90,6 +89,23 @@ def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEE
     dataset = dataset.shuffle(seed = seed)
     return dataset
 
+@click.command()
+@click.arguemnt('local-output-dir', type = click.Path(exists = False, dir_okay = True, file_okay = False))
+@click.option('--epochs', '-e', type = int, default = 3)
+@click.option('--train-batch-size', type = int, default = 8)
+@click.option('--eval-batch-size', type = int, default = 8)
+@click.option('--lr', type = float, default = 1e-5)
+@click.option('--seed', type = int, default = SEED)
+@click.option('--gradient-checkpointing/--no-gradient-checkpointing', default = True)
+@click.option('--cuda/--no-cuda', default = True)
+@click.option('--deepspeed', type = click.Path(exists = True, file_okay = True, dir_okay = False), default = None)
+@click.option('--test-size', type = int, default = 100)
+@click.option('--model-id', type = str, default = MODEL_ID)
+@click.option('--local_rank', default = True)
+@click.option('--fp16/--no-fp16', default = False)
+@click.option('--max-length', type = int, default = DEFAULT_MAX_LENGTH)
+@click.option('--dataset', type = str, default = DATASET)
+@click.option('--load-best/--no-load-best', default = True)
 def train(
         local_output_dir,
         epochs,
@@ -100,13 +116,13 @@ def train(
         gradient_checkpointing,
         cuda,
         deepspeed,
-        test_size = 100,
-        model_id = MODEL_ID,
-        local_rank = None,
-        fp16 = False,
-        max_length = DEFAULT_MAX_LENGTH,
-        dataset = DATASET,
-        load_best = True
+        test_size,
+        model_id,
+        local_rank,
+        fp16,
+        max_length,
+        dataset,
+        load_best
 ):
     set_seed(seed)
 
@@ -156,5 +172,4 @@ def train(
         data_collator = data_collator
     )
     trainer.train()
-
     trainer.save_model(local_output_dir)
