@@ -90,7 +90,7 @@ def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEE
     return dataset
 
 @click.command()
-@click.arguemnt('local-output-dir', type = click.Path(exists = False, dir_okay = True, file_okay = False))
+@click.argument('local-output-dir', type = click.Path(exists = False, dir_okay = True, file_okay = False))
 @click.option('--epochs', '-e', type = int, default = 3)
 @click.option('--train-batch-size', type = int, default = 8)
 @click.option('--eval-batch-size', type = int, default = 8)
