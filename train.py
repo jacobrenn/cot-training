@@ -143,7 +143,7 @@ def train(
         per_device_train_batch_size = train_batch_size,
         per_device_eval_batch_size = eval_batch_size,
         learning_rate = lr,
-        num_training_epochs = epochs,
+        num_train_epochs = epochs,
         gradient_checkpointing = gradient_checkpointing,
         logging_dir = f'{local_output_dir}/runs',
         logging_strategy = 'steps',
