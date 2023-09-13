@@ -173,3 +173,6 @@ def train(
     )
     trainer.train()
     trainer.save_model(local_output_dir)
+
+if __name__ == '__main__':
+    train()
