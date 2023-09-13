@@ -101,7 +101,7 @@ def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEE
 @click.option('--deepspeed', type = click.Path(exists = True, file_okay = True, dir_okay = False), default = None)
 @click.option('--test-size', type = int, default = 100)
 @click.option('--model-id', type = str, default = MODEL_ID)
-@click.option('--local_rank', default = True)
+@click.option('--local_rank', type = int, default = 0)
 @click.option('--fp16/--no-fp16', default = False)
 @click.option('--max-length', type = int, default = DEFAULT_MAX_LENGTH)
 @click.option('--dataset', type = str, default = DATASET)
