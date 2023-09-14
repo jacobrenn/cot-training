@@ -1,7 +1,8 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, DataCollatorForLanguageModeling, Trainer, TrainingArguments, set_seed
+from transformers import AutoModelForCausalLM, AutoTokenizer, DataCollatorForLanguageModeling, Trainer, TrainingArguments, set_seed, BitsAndBytesConfig
 from datasets import load_dataset, Dataset
 from functools import partial
 import numpy as np
+import torch
 import click
 
 DATASET = 'aisquared/cot-ensemble-prompts'
@@ -46,7 +47,19 @@ class DataCollatorForCompletionOnly(DataCollatorForLanguageModeling):
         return batch
     
 def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False):
-    model = AutoModelForCausalLM.from_pretrained(model_id, trust_remote_code = True, use_cache = False if gradient_checkpointing else True)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        trust_remote_code = True,
+        use_cache = False if gradient_checkpointing else True,
+        device_map = 'auto',
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit = True,
+            bnb_4bit_use_double_quant = True,
+            bnb_4bit_quant_type = 'nf4',
+            bnb_4bit_compute_dtype = torch.float16
+        )
+    )
+    model = AutoModelForCausalLM.from_pretrained(model_id, trust_remote_code = True, use_cache = False if gradient_checkpointing else True, device_map = 'auto')
     tokenizer = AutoTokenizer.from_pretrained(model_id , use_fast = False)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.add_special_tokens(
