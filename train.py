@@ -1,4 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, DataCollatorForLanguageModeling, Trainer, TrainingArguments, set_seed, BitsAndBytesConfig
+from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
 from datasets import load_dataset, Dataset
 from functools import partial
 import numpy as np
@@ -68,6 +69,18 @@ def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False)
         }
     )
     model.resize_token_embeddings(len(tokenizer))
+
+    model = prepare_model_for_kbit_training(model)
+
+    peft_config = LoraConfig(
+        r=8,
+        lora_alpha=32,
+        lora_dropout=0.1,
+        target_modules=["q_proj", "v_proj"],
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+    model = get_peft_model(model, peft_config)
     return model, tokenizer
 
 def preprocess_batch(batch, tokenizer, max_length = DEFAULT_MAX_LENGTH):
