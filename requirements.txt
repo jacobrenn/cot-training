@@ -1,4 +1,5 @@
 transformers[torch]
+sentencepiece
 bitsandbytes
 accelerate
 deepspeed
