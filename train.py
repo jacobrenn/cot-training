@@ -52,7 +52,7 @@ def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False)
         model_id,
         trust_remote_code = True,
         use_cache = False if gradient_checkpointing else True,
-        #device_map = 'auto',
+        device_map = 'auto',
         quantization_config = BitsAndBytesConfig(
             load_in_4bit = True,
             bnb_4bit_use_double_quant = True,
@@ -60,7 +60,7 @@ def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False)
             bnb_4bit_compute_dtype = torch.float16
         )
     )
-    model = AutoModelForCausalLM.from_pretrained(model_id, trust_remote_code = True, use_cache = False if gradient_checkpointing else True, device_map = 'auto')
+    #model = AutoModelForCausalLM.from_pretrained(model_id, trust_remote_code = True, use_cache = False if gradient_checkpointing else True, device_map = 'auto')
     tokenizer = AutoTokenizer.from_pretrained(model_id , use_fast = False)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.add_special_tokens(
