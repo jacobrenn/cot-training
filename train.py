@@ -13,7 +13,7 @@ THOUGHT_KEY = 'Thought:'
 ANSWER_KEY = 'Final Answer:'
 END_KEY = '### End'
 SEED = 42
-DEFAULT_MAX_LENGTH = 1024
+DEFAULT_MAX_LENGTH = 4096
 
 PREFIX = 'Answer the following question to the best of your ability. Be sure to show your chain of thought leading to the final answer.\n\n'
 
@@ -60,7 +60,6 @@ def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False)
             bnb_4bit_compute_dtype = torch.float16
         )
     )
-    #model = AutoModelForCausalLM.from_pretrained(model_id, trust_remote_code = True, use_cache = False if gradient_checkpointing else True, device_map = 'auto')
     tokenizer = AutoTokenizer.from_pretrained(model_id , use_fast = False)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.add_special_tokens(
@@ -118,14 +117,14 @@ def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEE
 @click.command()
 @click.argument('local-output-dir', type = click.Path(exists = False, dir_okay = True, file_okay = False))
 @click.option('--epochs', '-e', type = int, default = 3)
-@click.option('--train-batch-size', type = int, default = 8)
-@click.option('--eval-batch-size', type = int, default = 8)
+@click.option('--train-batch-size', type = int, default = 16)
+@click.option('--eval-batch-size', type = int, default = 16)
 @click.option('--lr', type = float, default = 1e-5)
 @click.option('--seed', type = int, default = SEED)
 @click.option('--gradient-checkpointing/--no-gradient-checkpointing', default = True)
 @click.option('--cuda/--no-cuda', default = True)
 @click.option('--deepspeed', type = click.Path(exists = True, file_okay = True, dir_okay = False), default = None)
-@click.option('--test-size', type = int, default = 100)
+@click.option('--test-size', type = int, default = 5000)
 @click.option('--model-id', type = str, default = MODEL_ID)
 @click.option('--local_rank', type = int, default = 0)
 @click.option('--fp16/--no-fp16', default = True)
