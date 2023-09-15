@@ -68,7 +68,7 @@ def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False)
             'additional_special_tokens' : [QUESTION_KEY, THOUGHT_KEY, ANSWER_KEY, END_KEY]
         }
     )
-    model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of = 8)
+    model.resize_token_embeddings(len(tokenizer))
 
     model = prepare_model_for_kbit_training(model)
 
