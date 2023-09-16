@@ -1,9 +1,11 @@
 transformers[torch]
 sentencepiece
 bitsandbytes
+tensorboard
 accelerate
 deepspeed
 datasets
+protobuf
 torch
 click
 peft
