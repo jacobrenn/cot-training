@@ -47,19 +47,27 @@ class DataCollatorForCompletionOnly(DataCollatorForLanguageModeling):
         batch['labels'] = labels
         return batch
     
-def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False):
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        trust_remote_code = True,
-        use_cache = False if gradient_checkpointing else True,
-        device_map = 'auto',
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit = True,
-            bnb_4bit_use_double_quant = True,
-            bnb_4bit_quant_type = 'nf4',
-            bnb_4bit_compute_dtype = torch.float16
+def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False, use_4bit = True, use_lora = True):
+    if use_4bit:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            trust_remote_code = True,
+            use_cache = False if gradient_checkpointing else True,
+            device_map = 'auto',
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit = True,
+                bnb_4bit_use_double_quant = True,
+                bnb_4bit_quant_type = 'nf4',
+                bnb_4bit_compute_dtype = torch.float16
+            )
         )
-    )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            trust_remote_code = True,
+            use_cache = False if gradient_checkpointing else True,
+            device_map = 'auto'
+        )
     tokenizer = AutoTokenizer.from_pretrained(model_id , use_fast = False)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.add_special_tokens(
@@ -69,17 +77,19 @@ def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False)
     )
     model.resize_token_embeddings(len(tokenizer))
 
-    model = prepare_model_for_kbit_training(model)
+    if use_4bit:
+        model = prepare_model_for_kbit_training(model)
 
-    peft_config = LoraConfig(
-        r=8,
-        lora_alpha=32,
-        lora_dropout=0.1,
-        target_modules=["q_proj", "v_proj"],
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-    model = get_peft_model(model, peft_config)
+    if use_lora:
+        peft_config = LoraConfig(
+            r=8,
+            lora_alpha=32,
+            lora_dropout=0.1,
+            target_modules=["q_proj", "v_proj"],
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        model = get_peft_model(model, peft_config)
     return model, tokenizer
 
 def preprocess_batch(batch, tokenizer, max_length = DEFAULT_MAX_LENGTH):
@@ -131,6 +141,8 @@ def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEE
 @click.option('--max-length', type = int, default = DEFAULT_MAX_LENGTH)
 @click.option('--dataset', type = str, default = DATASET)
 @click.option('--load-best/--no-load-best', default = True)
+@click.option('--use-4bit/--no-use-4bit', default = True)
+@click.option('--use-lora/--no-use-lora', default = True)
 def train(
         local_output_dir,
         epochs,
@@ -147,11 +159,13 @@ def train(
         fp16,
         max_length,
         dataset,
-        load_best
+        load_best,
+        use_4bit,
+        use_lora
 ):
     set_seed(seed)
 
-    model, tokenizer = get_model_and_tokenizer(model_id = model_id, gradient_checkpointing = gradient_checkpointing)
+    model, tokenizer = get_model_and_tokenizer(model_id = model_id, gradient_checkpointing = gradient_checkpointing, use_4bit = use_4bit, use_lora = use_lora)
     
     processed_dataset = preprocess_dataset(tokenizer, max_length = max_length, dataset_name = dataset)
     split_dataset = processed_dataset.train_test_split(test_size = test_size, seed = seed)
