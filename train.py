@@ -47,7 +47,7 @@ class DataCollatorForCompletionOnly(DataCollatorForLanguageModeling):
         batch['labels'] = labels
         return batch
     
-def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False, use_4bit = True, use_lora = True):
+def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False, use_4bit = True, use_lora = True, lora_r = 16, lora_bias = 'all'):
     if use_4bit:
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
@@ -70,23 +70,23 @@ def get_model_and_tokenizer(model_id = MODEL_ID, gradient_checkpointing = False,
         )
     tokenizer = AutoTokenizer.from_pretrained(model_id , use_fast = False)
     tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.add_special_tokens(
-        {
-            'additional_special_tokens' : [QUESTION_KEY, THOUGHT_KEY, ANSWER_KEY, END_KEY]
-        }
-    )
-    model.resize_token_embeddings(len(tokenizer))
+    #tokenizer.add_special_tokens(
+        #{
+            #'additional_special_tokens' : [QUESTION_KEY, THOUGHT_KEY, ANSWER_KEY, END_KEY]
+        #}
+    #)
+    #model.resize_token_embeddings(len(tokenizer))
 
     if use_4bit:
         model = prepare_model_for_kbit_training(model)
 
     if use_lora:
         peft_config = LoraConfig(
-            r=8,
+            r=lora_r,
             lora_alpha=32,
             lora_dropout=0.1,
             target_modules=["q_proj", "v_proj"],
-            bias="none",
+            bias=lora_bias,
             task_type="CAUSAL_LM",
         )
         model = get_peft_model(model, peft_config)
@@ -129,7 +129,7 @@ def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEE
 @click.option('--epochs', '-e', type = int, default = 3)
 @click.option('--train-batch-size', type = int, default = 16)
 @click.option('--eval-batch-size', type = int, default = 16)
-@click.option('--lr', type = float, default = 1e-5)
+@click.option('--lr', type = float, default = 1e-4)
 @click.option('--seed', type = int, default = SEED)
 @click.option('--gradient-checkpointing/--no-gradient-checkpointing', default = True)
 @click.option('--cuda/--no-cuda', default = True)
@@ -143,6 +143,8 @@ def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEE
 @click.option('--load-best/--no-load-best', default = True)
 @click.option('--use-4bit/--no-use-4bit', default = True)
 @click.option('--use-lora/--no-use-lora', default = True)
+@click.option('--lora-r', type = int, default = 16)
+@click.option('--lora-bias', type = str, default = 'all')
 def train(
         local_output_dir,
         epochs,
@@ -161,11 +163,20 @@ def train(
         dataset,
         load_best,
         use_4bit,
-        use_lora
+        use_lora,
+        lora_r,
+        lora_bias
 ):
     set_seed(seed)
 
-    model, tokenizer = get_model_and_tokenizer(model_id = model_id, gradient_checkpointing = gradient_checkpointing, use_4bit = use_4bit, use_lora = use_lora)
+    model, tokenizer = get_model_and_tokenizer(
+        model_id = model_id,
+        gradient_checkpointing = gradient_checkpointing,
+        use_4bit = use_4bit,
+        use_lora = use_lora,
+        lora_r = lora_r,
+        lora_bias = lora_bias
+    )
     
     processed_dataset = preprocess_dataset(tokenizer, max_length = max_length, dataset_name = dataset)
     split_dataset = processed_dataset.train_test_split(test_size = test_size, seed = seed)
