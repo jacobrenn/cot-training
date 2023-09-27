@@ -37,7 +37,17 @@ def validate_gpt4(response):
         messages = messages,
         temperature = 1
     )
-    return response.choices[0]['message']['content']
+    response_content = response.choices[0]['message']['content'].strip()
+    mapper = {'no' : False, 'yes' : True}
+    answer_correct = None
+    logic_correct = None
+    for line in response_content.splitlines():
+        if 'answer_correct' in line:
+            answer_correct = mapper.get(line.split(':')[1].strip())
+        if 'logic_correct' in line:
+            logic_correct = mapper.get(line.split(':')[1].strip())
+
+    return answer_correct, logic_correct
 
 
 @click.command()
