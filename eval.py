@@ -84,3 +84,6 @@ def main(model_id, openai_key_file, output):
     print(response)
     print('\n\n')
     print(gpt4_response)
+
+if __name__ == '__main__':
+    main()
