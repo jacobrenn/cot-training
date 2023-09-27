@@ -46,7 +46,7 @@ def validate_gpt4(response):
 @click.option('--output', '-o', type = click.Path(exists = False, file_okay = True, dir_okay = False), default = './output.csv')
 def main(model_id, openai_key_file, output):
     dataset = load_dataset(DATASET)
-    dataset = dataset.shuffle(seed = SEED)
+    dataset = dataset.shuffle(seed = SEED)['train']
     dataset.train_test_split(test_size = TEST_SIZE, seed = SEED)
     dataset = dataset['test']
 
