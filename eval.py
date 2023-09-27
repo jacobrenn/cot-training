@@ -32,11 +32,16 @@ def validate_gpt4(response):
             'content' : f'The following text contains a question asked to and an answer provided by a chatbot, along with the chatbot\'s chain of thought. I need to know both if the answer that the chatbot provided is correct and if the logic to get to the answer is correct. Please provide ONLY yes or no responses to whether the answer and the content is correct, formatted in the following way:\n\nanswer_correct: yes/no\nlogic_correct: yes/no. Do not provide any other answer besides yes or no\n\nBegin:\n\n{response}\n\nWas the model\'s answer and logic correct?'
         }
     ]
-    response = openai.ChatCompletion.create(
-        model = 'gpt-4',
-        messages = messages,
-        temperature = 1
-    )
+    response = None
+    while not response:
+        try:
+            response = openai.ChatCompletion.create(
+                model = 'gpt-4',
+                messages = messages,
+                temperature = 1
+            )
+        except:
+            continue
     response_content = response.choices[0]['message']['content'].strip()
     mapper = {'no' : False, 'yes' : True}
     answer_correct = None
@@ -86,7 +91,7 @@ def main(model_id, openai_key_file, output):
         openai.api_key = f.read().strip()
 
     validated_responses = []
-    for i in tqdm(range(len(dataset['prompt'][:10]))):
+    for i in tqdm(range(len(dataset['prompt']))):
         original_prompt = dataset['prompt'][i]
         prompt = dataset['prompt'][i].split(THOUGHT_KEY)[0]
         response = get_model_response(llm, prompt)
@@ -101,6 +106,7 @@ def main(model_id, openai_key_file, output):
         )
 
     df = pd.DataFrame(validated_responses)
+    df.to_csv(output, index = False)
     print(df.head())
 
 if __name__ == '__main__':
