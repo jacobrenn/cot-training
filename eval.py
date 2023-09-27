@@ -85,15 +85,23 @@ def main(model_id, openai_key_file, output):
     with open(openai_key_file, 'r') as f:
         openai.api_key = f.read().strip()
 
-    prompt = dataset['prompt'][0].split(THOUGHT_KEY)[0]
-    response = get_model_response(llm, prompt)
-    gpt4_response = validate_gpt4(response)
+    validated_responses = []
+    for i in tqdm(range(len(dataset['prompt'][:10]))):
+        original_prompt = dataset['prompt'][i]
+        prompt = dataset['prompt'].split(THOUGHT_KEY)[0]
+        response = get_model_response(llm, prompt)
+        answer_correct, logic_correct = validate_gpt4(response)
+        validated_responses.append(
+            {
+                'original' : original_prompt,
+                'response' : response,
+                'answer_correct' : answer_correct,
+                'logic_correct' : logic_correct
+            }
+        )
 
-    print(prompt)
-    print('\n\n')
-    print(response)
-    print('\n\n')
-    print(gpt4_response)
+    df = pd.DataFrame(validated_responses)
+    print(df.head())
 
 if __name__ == '__main__':
     main()
