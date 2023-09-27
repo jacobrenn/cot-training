@@ -47,7 +47,7 @@ def validate_gpt4(response):
 def main(model_id, openai_key_file, output):
     dataset = load_dataset(DATASET)
     dataset = dataset.shuffle(seed = SEED)['train']
-    dataset.train_test_split(test_size = TEST_SIZE, seed = SEED)
+    dataset = dataset.train_test_split(test_size = TEST_SIZE, seed = SEED)
     dataset = dataset['test']
 
     model = AutoModelForCausalLM.from_pretrained(
