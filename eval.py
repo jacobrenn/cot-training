@@ -88,7 +88,7 @@ def main(model_id, openai_key_file, output):
     validated_responses = []
     for i in tqdm(range(len(dataset['prompt'][:10]))):
         original_prompt = dataset['prompt'][i]
-        prompt = dataset['prompt'].split(THOUGHT_KEY)[0]
+        prompt = dataset['prompt'][i].split(THOUGHT_KEY)[0]
         response = get_model_response(llm, prompt)
         answer_correct, logic_correct = validate_gpt4(response)
         validated_responses.append(
