@@ -59,7 +59,8 @@ def get_model_and_tokenizer(
     
     target_modules = {
         'attention' : ['q_proj', 'v_proj'],
-        'all' : ['q_proj','k_proj','v_proj','o_proj','gate_proj','down_proj','up_proj','lm_head']
+        'all' : ['q_proj','k_proj','v_proj','o_proj','gate_proj','down_proj','up_proj','lm_head'],
+        'falcon-all' : ['query_key_value', 'dense', 'dense_h_to_4h', 'dense_4h_to_h', 'lm_head']
     }[target_modules]
 
     if use_4bit:
