@@ -68,7 +68,7 @@ def get_model_and_tokenizer(
             model_id,
             trust_remote_code = True,
             use_cache = False if gradient_checkpointing else True,
-            device_map = 'auto',
+            #device_map = 'auto',
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit = True,
                 bnb_4bit_use_double_quant = True,
@@ -105,7 +105,8 @@ def preprocess_batch(batch, tokenizer, max_length = DEFAULT_MAX_LENGTH):
     return tokenizer(
         batch['text'],
         max_length = max_length,
-        truncation = True
+        truncation = True,
+        return_token_type_ids = False
     )
 
 def preprocess_dataset(tokenizer, max_length, dataset_name = DATASET, seed = SEED):
@@ -191,6 +192,7 @@ def train(
     )
     
     processed_dataset = preprocess_dataset(tokenizer, max_length = max_length, dataset_name = dataset)
+    processed_dataset = processed_dataset.with_format('torch', device = 'cuda')
     split_dataset = processed_dataset.train_test_split(test_size = test_size, seed = seed)
 
     data_collator = DataCollatorForCompletionOnly(
