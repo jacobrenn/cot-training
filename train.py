@@ -60,7 +60,6 @@ def get_model_and_tokenizer(
     target_modules = {
         'attention' : ['q_proj', 'v_proj'],
         'all' : ['q_proj','k_proj','v_proj','o_proj','gate_proj','down_proj','up_proj','lm_head'],
-        'mpt-all' : ['Wqkv', 'out_proj', 'up_proj', 'down_proj', 'lm_head']
     }[target_modules]
 
     if use_4bit:
@@ -68,7 +67,7 @@ def get_model_and_tokenizer(
             model_id,
             trust_remote_code = True,
             use_cache = False if gradient_checkpointing else True,
-            #device_map = 'auto',
+            device_map = 'auto',
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit = True,
                 bnb_4bit_use_double_quant = True,
